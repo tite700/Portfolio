@@ -46,7 +46,7 @@
 
 		// === Contrôle caméra (FPS) ===
 		const controls = new PointerLockControls(camera, canvas);
-		scene.add(controls.getObject());
+		scene.add(controls.object);
 
 		canvas.addEventListener('click', () => {
 			controls.lock();
@@ -116,7 +116,7 @@
 			// Appliquer la gravité
 			velocityY -= gravity * delta;
 
-			const position = controls.getObject().position;
+			const position = controls.object.position;
 			position.y += velocityY * delta;
 
 			// Ajout : collision AABB AVANT mouvement
@@ -128,8 +128,6 @@
 			new THREE.Vector3(nextPosition.x, nextPosition.y - playerHeight / 2, nextPosition.z),
 			new THREE.Vector3(0.5, playerHeight, 0.5)
 			);
-
-
 
 			// Vérifie si le joueur est au sol
 			const raycaster = new THREE.Raycaster(position, new THREE.Vector3(0, -1, 0));
