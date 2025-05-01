@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as THREE from 'three';
+
 	// @ts-ignore : Ignore l'erreur TypeScript car ce module n'a pas de types définis
 	import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 
@@ -11,7 +12,12 @@
 		const scene = new THREE.Scene();
 		scene.background = new THREE.Color(0x202020);
 
-		const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+		const camera = new THREE.PerspectiveCamera(
+			75,
+			window.innerWidth / window.innerHeight,
+			0.1,
+			1000
+		);
 		camera.position.y = 1.6; // Hauteur du joueur (debout)
 
 		const renderer = new THREE.WebGLRenderer({ canvas });
@@ -24,8 +30,6 @@
 
 		const ambientLight = new THREE.AmbientLight(0x404040); // lumière douce
 		scene.add(ambientLight);
-
-		
 
 		// === Sol ===
 		const floorGeometry = new THREE.PlaneGeometry(100, 100);
@@ -58,17 +62,23 @@
 		const direction = new THREE.Vector3(); // Direction souhaitée
 		const move = { forward: false, backward: false, left: false, right: false };
 
-		
-
 		let canJump = false;
 
 		// === Gestion clavier ===
 		const onKeyDown = (event: KeyboardEvent) => {
 			switch (event.code) {
-				case 'KeyW': move.forward = true; break;
-				case 'KeyS': move.backward = true; break;
-				case 'KeyA': move.left = true; break;
-				case 'KeyD': move.right = true; break;
+				case 'KeyW':
+					move.forward = true;
+					break;
+				case 'KeyS':
+					move.backward = true;
+					break;
+				case 'KeyA':
+					move.left = true;
+					break;
+				case 'KeyD':
+					move.right = true;
+					break;
 				case 'Space':
 					if (canJump) {
 						velocityY = 5; // Force du saut
@@ -79,10 +89,18 @@
 		};
 		const onKeyUp = (event: KeyboardEvent) => {
 			switch (event.code) {
-				case 'KeyW': move.forward = false; break;
-				case 'KeyS': move.backward = false; break;
-				case 'KeyA': move.left = false; break;
-				case 'KeyD': move.right = false; break;
+				case 'KeyW':
+					move.forward = false;
+					break;
+				case 'KeyS':
+					move.backward = false;
+					break;
+				case 'KeyA':
+					move.left = false;
+					break;
+				case 'KeyD':
+					move.right = false;
+					break;
 			}
 		};
 
@@ -125,8 +143,8 @@
 			nextPosition.z += -velocity.z * delta;
 
 			const playerBoxNext = new THREE.Box3().setFromCenterAndSize(
-			new THREE.Vector3(nextPosition.x, nextPosition.y - playerHeight / 2, nextPosition.z),
-			new THREE.Vector3(0.5, playerHeight, 0.5)
+				new THREE.Vector3(nextPosition.x, nextPosition.y - playerHeight / 2, nextPosition.z),
+				new THREE.Vector3(0.5, playerHeight, 0.5)
 			);
 
 			// Vérifie si le joueur est au sol
@@ -164,6 +182,7 @@
 			camera.updateProjectionMatrix();
 			renderer.setSize(window.innerWidth, window.innerHeight);
 		});
+		// wait 2s manually
 	});
 </script>
 
