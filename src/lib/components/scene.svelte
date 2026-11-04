@@ -10,7 +10,7 @@
 
 <T.PerspectiveCamera makeDefault position={[5, 8, 10]}>
 	<OrbitControls />
-	<Gizmo />
+	<Gizmo />                                                                                                                                                                                                                                                    
 </T.PerspectiveCamera>
 
 <T.DirectionalLight position={[light.x, light.y, light.z]} intensity={light.intensity} />
