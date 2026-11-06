@@ -48,7 +48,7 @@
 
 	const contacts = [
 		{ label: 'Email', href: 'mailto:baptistedavidpro92@gmail.com' },
-		{ label: 'LinkedIn', href: 'https://www.linkedin.com/in/baptiste-david-851a88231/' },
+		{ label: 'LinkedIn', href: 'https://linkedin.com/in/BaptisteDavid' },
 		{ label: 'itch.io', href: 'https://itch.io/profile/tite700' }
 	];
 </script>

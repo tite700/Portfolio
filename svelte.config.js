@@ -1,5 +1,5 @@
 import { mdsvex } from 'mdsvex';
-import adapter from '@sveltejs/adapter-node';
+import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -9,7 +9,8 @@ const config = {
   preprocess: [vitePreprocess(), mdsvex()],
 
   kit: {
-    adapter: adapter(),
+    // Static export; strict: false skips /editor, which only runs on the dev server.
+    adapter: adapter({ strict: false }),
     alias: {
       '@/*': './src/lib/*'
     }

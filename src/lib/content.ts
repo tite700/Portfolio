@@ -216,6 +216,8 @@ export const projects = place('projects', [
 			'Cooperative puzzle game: solve intricate puzzles together in a mysterious place.'
 		],
 		links: [
+			{ label: 'Co-op FPS on itch.io', href: 'https://martinfond.itch.io/coopfps' },
+			{ label: 'Co-op puzzle on itch.io', href: 'https://martinfond.itch.io/uqartingvr' },
 			{ label: 'Co-op FPS gameplay', href: 'https://youtu.be/x6Ze6o3bEEw' },
 			{ label: 'Co-op puzzle gameplay', href: 'https://youtu.be/mda-PeA5Ddk' }
 		],
@@ -345,6 +347,12 @@ export const work = place('work', [
 			'A chill and quirky VR fishing game on Meta Quest, where you play a bear fishing on a lake full of fish and random items.',
 			'At Albyon, I developed gameplay mechanics and VR interactions for it.'
 		],
+		links: [
+			{
+				label: 'Play on Meta Quest',
+				href: 'https://www.meta.com/fr-fr/experiences/bear-on-boat/25807507738875155/'
+			}
+		],
 		poi: { kind: 'bearboat', label: 'Bear on a boat', size: [3, 1.8, 3] }
 	},
 	{
@@ -361,7 +369,7 @@ export const work = place('work', [
 		links: [
 			{
 				label: 'Play on Meta Quest',
-				href: 'https://www.meta.com/experiences/bear-scouts/33549458664669770/'
+				href: 'https://www.meta.com/fr-fr/experiences/bear-scouts/33549458664669770/'
 			},
 			{ label: 'Game page', href: 'https://www.arianestudios.com/bear-scouts' }
 		],
@@ -381,6 +389,10 @@ export const work = place('work', [
 			{
 				label: 'Play on Meta Quest',
 				href: 'https://www.meta.com/experiences/loot/35024660313846255/'
+			},
+			{
+				label: 'Latest update',
+				href: 'https://www.meta.com/fr-fr/experiences/app/developer-post/38715509994729578/'
 			}
 		],
 		poi: { kind: 'loot', label: 'Diamond ore', size: [1.6, 1.4, 1.2] }
@@ -393,6 +405,12 @@ export const work = place('work', [
 			'A VR production from Albyon, where I developed gameplay mechanics and VR interactions.',
 		body: [
 			'A VR production from Albyon, where I developed gameplay mechanics and VR interactions.'
+		],
+		links: [
+			{
+				label: 'Play on Meta Quest',
+				href: 'https://www.meta.com/fr-fr/experiences/plundr/1214103928448348/'
+			}
 		],
 		poi: { kind: 'plundr', label: 'Pirate ship', size: [3, 2.8, 3] }
 	},
@@ -427,6 +445,7 @@ export const work = place('work', [
 			'I developed and integrated new VR interactions to make the learning experience more immersive and effective.',
 			'I adapted the XR Interaction Toolkit and built custom locomotion, including a backdash system for more precise movement in VR, and designed interactive behaviors that fit the ergonomic and technical constraints of VR.'
 		],
+		links: [{ label: 'Widid agriculture', href: 'https://widid.fr/agriculture/' }],
 		poi: { kind: 'vineyard', label: 'Vineyard', size: [3.6, 1.8, 2.2] }
 	},
 	{

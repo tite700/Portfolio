@@ -138,7 +138,7 @@
 
 	async function save() {
 		status = 'Saving…';
-		const res = await fetch('/editor', { method: 'POST', body: JSON.stringify(lv) });
+		const res = await fetch('/editor/', { method: 'POST', body: JSON.stringify(lv) });
 		status = res.ok ? 'Saved ✓' : `Error ${res.status}`;
 		if (res.ok) dirty = false;
 	}

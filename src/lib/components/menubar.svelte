@@ -36,9 +36,6 @@
 						<a href="/playground">
 							<DropdownMenu.Item>Playground</DropdownMenu.Item>
 						</a>
-						<a href="/posts">
-							<DropdownMenu.Item>Posts</DropdownMenu.Item>
-						</a>
 						<a href="/work">
 							<DropdownMenu.Item>Work</DropdownMenu.Item>
 						</a>
@@ -59,9 +56,6 @@
 		<div class="ml-auto hidden flex-1 justify-end sm:flex">
 			<a href="/playground">
 				<Menubar.Trigger>Playground</Menubar.Trigger>
-			</a>
-			<a href="/posts">
-				<Menubar.Trigger>Posts</Menubar.Trigger>
 			</a>
 			<a href="/work">
 				<Menubar.Trigger>Work</Menubar.Trigger>

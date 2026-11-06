@@ -98,10 +98,17 @@ To add obstacles, place these pieces in `track.svelte`. The ball's handling (tor
 
 ## Deployment
 
-`npm run build` writes a Node server to `build/`. Start it with:
+The site is a static export (`@sveltejs/adapter-static`): `npm run build` prerenders every page as `<route>/index.html` in `build/`, so any static host works without rewrites. `/editor` is left out (dev only).
+
+It is hosted on `davidb.iiens.net`. `npm run deploy` builds it and assembles `deploy/`:
+
+- the new site at the root, plus an `index.php` that serves `index.html` (the host runs PHP);
+- the previous site in `/oldsite/`, copied from `../site-baptiste` (or `$OLD_SITE`);
+- `/portfolio/article_*.html` redirects from the previous site's article URLs to the new pages.
 
 ```bash
-node build
+npm run deploy                              # build deploy/ only, to check it
+npm run deploy -- login@host:remote/folder  # build it and upload it with scp -r
 ```
 
-You can set `PORT` and `HOST` as environment variables. See the [adapter-node docs](https://svelte.dev/docs/kit/adapter-node).
+`scp` adds and overwrites files but never deletes, so files removed from the site stay on the server until you delete them there.
