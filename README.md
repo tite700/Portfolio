@@ -4,14 +4,17 @@ A personal portfolio site built with SvelteKit, with interactive 3D pages powere
 
 ## Pages
 
-| Route         | Description                                                                 |
-| ------------- | --------------------------------------------------------------------------- |
-| `/`           | Homepage                                                                    |
-| `/playground` | 3D scene with a live Tweakpane panel to adjust lights and the sphere color |
-| `/game`       | Physics mini-game: roll a ball around a track with ramps and quarter pipes  |
-| `/posts`      | Posts (placeholder)                                                         |
-| `/projects`   | Projects (placeholder)                                                      |
-| `/resume`     | Resume (placeholder)                                                        |
+| Route               | Description                                                              |
+| ------------------- | ------------------------------------------------------------------------ |
+| `/`                 | Homepage with the main menu                                              |
+| `/playground`       | 3D city: walk or skate to the projects and hobbies, click to open them  |
+| `/work`             | Professional experiences and their games, articles at `/work/[slug]`    |
+| `/projects`         | Student and personal projects, articles at `/projects/[slug]`           |
+| `/hobbies`          | Hobby cards, each with an article page at `/hobbies/[slug]`             |
+| `/resume`           | Experience, education, skills, contact and the CV (`static/cv/`)        |
+| `/awale/awale.html` | The AR Awale game (static, A-Frame)                                      |
+
+Work, projects and hobbies live in `src/lib/content.ts`. The city has one district per section: hobbies west (x = -48), projects in the middle, work east (x = 48), each marked by signs and colored markers. Each entry has its article text and its spot in the city (`poi`); its 3D model is drawn by `src/lib/components/game/model.svelte` and shown both in the city and in the article's showcase.
 
 ### Game controls
 

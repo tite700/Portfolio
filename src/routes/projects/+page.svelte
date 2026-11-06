@@ -1,28 +1,13 @@
 <script lang="ts">
-	import { projects } from '$lib/projects';
+	import PageTitle from '$lib/components/page-title.svelte';
+	import SpotGrid from '$lib/components/spot-grid.svelte';
+	import { projects } from '$lib/content';
 </script>
 
-<div class="align flex w-full items-center justify-center px-5">
-	<h1 class="scroll-m-20 pt-[10rem] text-center text-4xl font-extrabold tracking-tight lg:text-5xl">
-		My projects
-	</h1>
-</div>
+<svelte:head><title>Projects · Baptiste David</title></svelte:head>
 
-<div class="mx-auto grid max-w-5xl gap-4 p-5 sm:grid-cols-2">
-	{#each projects as project (project.slug)}
-		<a
-			href={project.url}
-			target="_blank"
-			rel="noopener"
-			class="rounded-xl border p-4 hover:bg-muted"
-		>
-			<h2 class="text-lg font-bold">{project.title}</h2>
-			<p class="mt-1 text-sm text-muted-foreground">{project.summary}</p>
-			<div class="mt-2 flex flex-wrap gap-1">
-				{#each project.tags as tag (tag)}
-					<span class="rounded-full bg-secondary px-2 py-0.5 text-xs">{tag}</span>
-				{/each}
-			</div>
-		</a>
-	{/each}
-</div>
+<PageTitle
+	title="Projects"
+	quote="“Talent is something you make bloom, instinct is something you polish.” – Haruichi Furudate"
+/>
+<SpotGrid spots={projects} />

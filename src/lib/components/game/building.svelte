@@ -57,4 +57,13 @@
 	<T.Mesh material={materials} castShadow receiveShadow>
 		<T.BoxGeometry args={size} />
 	</T.Mesh>
+	<!-- Cornice and a rooftop unit -->
+	<T.Mesh position.y={h / 2 + 0.2} castShadow>
+		<T.BoxGeometry args={[w + 0.5, 0.4, d + 0.5]} />
+		<T.MeshLambertMaterial color="#475569" />
+	</T.Mesh>
+	<T.Mesh position={[w / 5, h / 2 + 0.9, -d / 5]} castShadow>
+		<T.BoxGeometry args={[2.5, 1.4, 2]} />
+		<T.MeshLambertMaterial color="#94a3b8" />
+	</T.Mesh>
 </T.Group>

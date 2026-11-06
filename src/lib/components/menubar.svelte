@@ -39,8 +39,14 @@
 						<a href="/posts">
 							<DropdownMenu.Item>Posts</DropdownMenu.Item>
 						</a>
+						<a href="/work">
+							<DropdownMenu.Item>Work</DropdownMenu.Item>
+						</a>
 						<a href="/projects">
 							<DropdownMenu.Item>Projects</DropdownMenu.Item>
+						</a>
+						<a href="/hobbies">
+							<DropdownMenu.Item>Hobbies</DropdownMenu.Item>
 						</a>
 						<a href="/resume">
 							<DropdownMenu.Item>Resume</DropdownMenu.Item>
@@ -57,8 +63,14 @@
 			<a href="/posts">
 				<Menubar.Trigger>Posts</Menubar.Trigger>
 			</a>
+			<a href="/work">
+				<Menubar.Trigger>Work</Menubar.Trigger>
+			</a>
 			<a href="/projects">
 				<Menubar.Trigger>Projects</Menubar.Trigger>
+			</a>
+			<a href="/hobbies">
+				<Menubar.Trigger>Hobbies</Menubar.Trigger>
 			</a>
 			<a href="/resume">
 				<Menubar.Trigger>Resume</Menubar.Trigger>

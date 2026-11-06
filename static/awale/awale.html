@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jeu de l'awalé - Réalité Augmentée</title>
+    <meta charset="utf-8"/>
+    <script src="aframe-master.min.js"></script>
+    <!--test-->
+</head>
+<body style="font-family: sans-serif;" onload="init()">
+    <style>
+        .hidden {
+            visibility: hidden;
+        }
+
+        .message {
+            color: white; 
+            text-shadow: 1px 1px 1px navy;
+        }
+
+        .won {
+            color: orange;
+            font-size: 500%;
+        }
+
+        .selected {
+            color: green;
+          }
+    </style>
+    <script>
+        let moveCount = 0;
+
+        AFRAME.registerSystem('hole', {
+            init: function() {
+                // Initialisation des variables et des structures de données
+                this.entities=[];
+                this.scorej1 = 0;
+                this.scorej2 = 0;
+                this.textescore1 = document.getElementById('scorej1');
+                this.scoreBoardJ1 = document.getElementById('scoreBoardJ1');
+                this.textescore2 = document.getElementById('scorej2');
+                this.scoreBoardJ2 = document.getElementById('scoreBoardJ2');
+                this.tourj1 = true; 
+                this.selectedGrenier = null;
+                this.gameOver = false;
+                this.board = [4,4,4,4,4,4,4,4,4,4,4,4];
+            },
+            register: function(el) {
+                // Enregistrement d'un élément dans le système
+                this.entities.push(el);
+                let index = this.entities.indexOf(el);
+                let nbGraines = this.board[index];
+                let text = el.querySelector('a-text');
+                text.setAttribute('value', nbGraines);
+                
+            },
+            unregister: function(el) {
+                let index = this.entities.indexOf(el);
+                this.entities.splice(index, 1);
+            },
+            
+            affiche: function() {
+                var i = 0;
+                for (let el of this.entities) {
+                    let text = el.getChildEntities()[0];
+                    text.setAttribute('value', this.board[i]);
+                    i++;
+                }
+                this.textescore1.innerHTML = "Score joueur 1 : " + this.scorej1;
+                this.textescore2.innerHTML = "Score joueur 2 : " + this.scorej2;
+            },
+            select: function(el) {
+                if (this.gameOver) {
+                  return;
+                }
+                let index = this.entities.indexOf(el);
+                if (this.board[index] === 0) {
+                  return;
+                }
+                if (index < 6 && !this.tourj1) {
+                  return;
+                }
+                if (index >= 6 && this.tourj1) {
+                  return;
+                }
+                if (this.selectedGrenier !== null) {
+                    this.selectedGrenier.setAttribute('material', 'color', 'yellow');
+                }
+                this.selectedGrenier = el;
+                this.selectedGrenier.setAttribute('material', 'color', 'green');
+            },
+              
+            deselect: function() {
+                if (this.selectedGrenier !== null) {
+                    this.selectedGrenier.setAttribute('material', 'color', 'yellow');
+                    this.selectedGrenier = null;
+                }
+            },
+              
+            play: function() {
+                if (this.gameOver || this.selectedGrenier === null) {
+                  return;
+                }
+                let index = this.entities.indexOf(this.selectedGrenier);
+                this.move(index);
+                this.deselect();
+            },
+              
+            nextTurn: function() {
+                this.tourj1 = !this.tourj1;
+                if (this.tourj1) {
+                  document.getElementById('tour').innerHTML = 'Tour du joueur 1';
+                } else {
+                  document.getElementById('tour').innerHTML = 'Tour du joueur 2';
+                }
+            },
+              
+            end: function() {
+                this.gameOver = true;
+                let message = document.getElementById('message');
+                if (this.scorej1 > this.scorej2) {
+                  message.innerHTML = 'Le joueur 1 a gagné !';
+                } else if (this.scorej2 > this.scorej1) {
+                  message.innerHTML = 'Le joueur 2 a gagné !';
+                } else {
+                  message.innerHTML = 'Match nul !';
+                }
+            },
+              
+            restart: function() {
+                for (let i = 0; i < this.entities.length; i++) {
+                  this.board[i] = 4;
+                  let text = this.entities[i].getChildEntities()[0];
+                  text.setAttribute('value', 4);
+                }
+                this.scorej1 = 0;
+                this.scorej2 = 0;
+                this.gameOver = false;
+                this.tourj1 = true;
+                this.selectedGrenier = null;
+                document.getElementById('tour').innerHTML = 'Tour du joueur 1';
+                document.getElementById('message').innerHTML = '';
+                this.textescore1.innerHTML = 'Score joueur 1 : 0';
+                this.textescore2.innerHTML = 'Score joueur 2 : 0';
+            },
+              
+            updateScore: function() {
+                this.textescore1.innerHTML = 'Score joueur 1 : ' + this.scorej1;
+                this.textescore2.innerHTML = 'Score joueur 2 : ' + this.scorej2;
+            },
+              
+            move: function(index) {
+                let nbGraines = this.board[index];
+                this.board[index] = 0;
+                let currentIndex = index;
+                
+                while (nbGraines > 0) {
+                    currentIndex = (currentIndex + 1) % 12;
+                    if ((currentIndex < 6 && this.tourj1) || (currentIndex >= 6 && !this.tourj1)) {
+                    this.board[currentIndex]++;
+                    nbGraines--;
+                    }
+                }
+                
+                if ((currentIndex < 6 && this.tourj1 && (currentIndex === 5 || currentIndex === 11)) ||
+                    (currentIndex >= 6 && !this.tourj1 && (currentIndex === 5 || currentIndex === 11))) {
+                    if (this.board[currentIndex] === 2 || this.board[currentIndex] === 3) {
+                    if (this.tourj1) {
+                        this.scorej1 += this.board[currentIndex];
+                    } else {
+                        this.scorej2 += this.board[currentIndex];
+                    }
+                    this.board[currentIndex] = 0;
+                    }
+                }
+                
+                this.updateGreniers();
+                
+                let emptyGreniers = this.checkEmptyGreniers();
+                if (emptyGreniers.length === 6) {
+                    this.end();
+                } else {
+                    this.nextTurn();
+                }
+                el.emit('move-seed');
+            },
+
+              
+            capture: function(index) {
+                let oppositeIndex = 11 - index;
+                
+                if (this.tourj1 && index < 6 && this.board[oppositeIndex] !== 0) {
+                  this.scorej1 += this.board[oppositeIndex] + 1;
+                  this.board[oppositeIndex] = 0;
+                  this.board[index] = 0;
+                } else if (!this.tourj1 && index >= 6 && this.board[oppositeIndex] !== 0) {
+                  this.scorej2 += this.board[oppositeIndex] + 1;
+                  this.board[oppositeIndex] = 0;
+                  this.board[index] = 0;
+                }
+                
+                this.updateGreniers();
+                this.nextTurn();
+            },
+              
+            updateGreniers: function() {
+                for (let i = 0; i < this.entities.length; i++) {
+                  let text = this.entities[i].getChildEntities()[0];
+                  text.setAttribute('value', this.board[i]);
+                }
+            },
+              
+            checkEmptyGreniers: function() {
+                let emptyGreniers = [];
+                
+                for (let i = 0; i < this.entities.length; i++) {
+                  if (this.board[i] === 0) {
+                    emptyGreniers.push(i);
+                  }
+                }
+                
+                return emptyGreniers;
+            },
+        }); 
+
+        AFRAME.registerComponent('hole', {
+            init: function() {
+                let system = this.system;
+                let self = this;
+                let nbGraines = -1;
+                system.register(this.el);
+                this.el.addEventListener('click', function(evt) {
+                system.select(this);
+                });
+                this.el.addEventListener('stateadded', function(evt) {
+                if (evt.detail === "selected") {
+                    console.log(parseInt(this.getAttribute('id').slice(1)));
+                    self.el.setAttribute('material', 'color', 'green');
+                    self.el.classList.add('selected');
+                    
+                }
+                });
+                this.el.addEventListener('stateremoved', function(evt) {
+                if (evt.detail === "selected") {
+                    self.el.setAttribute('material', 'color', 'blue');
+                    self.el.classList.remove('selected');
+                }
+                });
+            },
+            remove: function() {
+                this.system.unregister(this.el);
+            }
+        });
+
+       
+        let init = function() {
+            let scene = document.querySelector('a-scene');
+            scene.addEventListener('ar-hit-test-select', function() {
+                scene.removeAttribute('ar-hit-test');
+                document.getElementById('status').innerHTML = "Select a hole";
+                document.getElementById('moves').classList.remove('hidden');
+            });
+            scene.addEventListener('ar-hit-test-start', function() {
+                document.getElementById('status').innerHTML = "Scan your environment";
+            });
+            scene.addEventListener('ar-hit-test-achieved', function() {
+                document.getElementById('status').innerHTML = "Place your board";
+            });
+            scene.addEventListener('end-game', function() {
+                document.getElementById('status').innerHTML = 'You won!';
+                document.getElementById('status').classList.add('won');
+            });
+            scene.addEventListener('enter-vr', function() {
+                document.getElementById('overlay').classList.remove('hidden');
+                document.getElementById('status').innerHTML = 'Place your board';
+            });
+            scene.addEventListener('exit-vr', function() {
+                document.getElementById('overlay').classList.add('hidden');
+            });
+            scene.addEventListener('move-seed', function() {
+                moveCount++;
+                document.getElementById('moves').innerHTML = "Move count: " + moveCount;
+            });
+        };
+        
+
+    </script>
+
+     <div style="position: absolute; left:0; top: 0; z-index:3;" >
+            <h1>Jeu de l'awalé</h1>
+
+            
+            <p>
+                Chaque joueur réalise, à tour de rôle, des semailles qui peuvent mener à des récoltes, ces dernières étant retirées du plateau.
+            </p>
+            <p>
+                Pour réaliser les semailles, le joueur prend les graines d'un des greniers situés de son côté et rajoute, dans le sens trigonométrique, une graine dans chaque grenier suivant (y compris chez l'adversaire) jusqu'à épuisement des graines.
+            </p>
+            <p>
+                Les récoltes ne sont autorisées que dans la situation suivante : la derniere graine est plantée dans un des greniers de l'adversaire et ce grenier ne contenait qu'une ou deux graines avant les semailles.
+            </p>
+            <p>
+                Dans ce cas, le joueur recolte les graines des greniers de l'adversaire contenant deux ou trois graines après les semailles.
+            </p>
+            <p>
+                Le joueur ayant recolté le plus de graines est le vainqueur.
+
+
+            </p>
+        </div>
+
+        <div id="overlay" class="hidden" style="position:absolute; left:0; top:0; z-index: 5;">
+            <h1 id="status" class="message">Flash</h1>
+            <h2 id="moves" class="hidden message">Move count: 0</h2>
+            <button id="reset" onclick="window.location.reload()" style="position:absolute; left:0; bottom: 0;">Reset</button>
+        </div>
+
+    <a-scene webxr="optionalFeatures: hit-test,dom-overlay; overlayElement:#overlay;"
+            reflection="directionalLight: a-light#light"
+            ar-hit-test="target: #gameset;">
+            
+        <a-light id="light" light="castShadow:true; type:directional;" position="0 2 0" color="#fff"></a-light>
+
+        <a-entity id="cam" position="0 1 0.5" rotation="-50 0 0" camera>
+
+            <a-entity cursor="fuse: true; fuseTimeout: 1000;"
+                    raycaster="objects: .hole"
+                    position="0 0 -0.1"
+                    geometry="primitive: ring; radiusInner: 0.002; radiusOuter: 0.003"
+                    material="color: white; shader: flat; transparent: true;"
+                    animation__fusing="property:material.opacity; startEvents:fusing; dir: alternate; dur: 1000; from: 1; to: 0.25;">
+            </a-entity>
+
+        </a-entity>
+
+            <a-assets>
+                <a-asset-item id="plateau" src="./test3_gltf.gltf"></a-asset-item>
+            </a-assets>
+
+        <a-entity gltf-model="#plateau" scale="0.10 0.10 0.10"></a-entity>
+        
+        <!-- J1 -->
+        <a-box id="a0" position="-0.41 0.1 0.06" color="tomato" depth="0.1" height="0.1" width="0.1" scale="1 0.1 1">
+            <a-text value="j1" position="0 0.05 0" rotation="270 0 0" width="2.5" anchor="center" align="center" color="blue"></a-text>
+        </a-box>
+        
+
+        <!-- Score J1 -->
+        <a-text id="scoreBoardJ1" value="0" position="-0.005 0.055 0.176" rotation="335.5 0 0" width="1.6" anchor="center" align="center" color="blue"></a-text>
+
+        <!-- J2 -->
+        <a-box id="a6" position="0.41 0.1 -0.06"  color="#6A352A" depth="0.1" height="0.1" width="0.1" scale="0.8 0.1 0.8">
+            <a-text value="j2" position="0 0.05 0" rotation="270 0 180" width="2.5" anchor="center" align="center" color="red"></a-text>
+        </a-box>
+
+        <!-- Score J2 -->
+        <a-text id="scoreBoardJ2" value="0" position="0 0.055 -0.176" rotation="335.5 0 0" width="1.6" anchor="center" align="center" color="red"></a-text>
+
+        <!-- Cubes au-dessus des greniers -->
+        <a-entity id="cubesContainer"></a-entity>
+
+        <script>
+            // Créer les cubes au-dessus des greniers
+            for (let i = 0; i < 12; i++) {
+                const hole = document.createElement('a-entity');
+                hole.setAttribute('hole', '');
+                hole.setAttribute('position', '0 0 0');
+
+                const cube = document.createElement('a-box');
+                cube.setAttribute('color', 'yellow');
+                cube.setAttribute('scale', '0.08 0.08 0.08');
+                cube.setAttribute('class', 'hole'); // Ajout de la classe "hole"
+                cube.setAttribute('hole', '');
+
+                const text = document.createElement('a-text');
+                text.setAttribute('value', '4');
+              
+                cube.appendChild(text);
+
+                const x = i % 6 * 0.11 - 0.25;
+                const z = Math.floor(i / 6) * -0.14 + 0.045;
+                cube.setAttribute('position', `${x} 0.08 ${z}`);
+                
+                hole.appendChild(cube);
+                document.querySelector('#cubesContainer').appendChild(hole);
+            }
+        </script>
+
+    </a-scene>
+
+        
+
+    </body>
+</html>

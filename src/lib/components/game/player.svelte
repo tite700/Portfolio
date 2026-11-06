@@ -5,11 +5,11 @@
 		CoefficientCombineRule,
 		type RigidBody as RapierRigidBody
 	} from '@dimforge/rapier3d-compat';
-	import { Group, Object3D, PerspectiveCamera, Quaternion, Vector3 } from 'three';
+	import { Group, Object3D, PerspectiveCamera, Vector3 } from 'three';
 	import Box from './box.svelte';
 	import Character from './character.svelte';
 	import { game } from './state.svelte';
-	import { projects } from '$lib/projects';
+	import { spots } from '$lib/content';
 
 	type Vec3 = [number, number, number];
 
@@ -43,7 +43,6 @@
 
 	let heading = Math.PI; // facing direction: (sin, cos) → starts toward -z
 	let grounded = false;
-	const groundNormal = new Vector3(0, 1, 0);
 	const anim = { speed: 0, skating: false, grounded: true };
 
 	// event.code = physical key, so ZQSD (AZERTY) and WASD (QWERTY) both work.
@@ -51,10 +50,7 @@
 	let jumpQueued = false;
 	const pressed = (...codes: string[]) => codes.some((c) => keys.has(c));
 
-	const UP = new Vector3(0, 1, 0);
 	const tmpV = new Vector3();
-	const qYaw = new Quaternion();
-	const qTilt = new Quaternion();
 
 	// Rotate angle `a` toward `b` by at most `step`.
 	function turnToward(a: number, b: number, step: number) {
@@ -63,8 +59,14 @@
 	}
 
 	function respawn() {
+		// Back to the plaza in the middle of the city, facing north.
 		body?.setTranslation({ x: spawn[0], y: spawn[1], z: spawn[2] }, true);
 		body?.setLinvel({ x: 0, y: 0, z: 0 }, true);
+		body?.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true);
+		body?.setAngvel({ x: 0, y: 0, z: 0 }, true);
+		heading = Math.PI;
+		yaw = 0;
+		target.set(...spawn);
 	}
 
 	usePhysicsTask((dt) => {
@@ -82,8 +84,6 @@
 			body
 		);
 		grounded = !!hit && hit.normal.y > 0.3;
-		if (grounded) groundNormal.copy(hit!.normal);
-		else groundNormal.copy(UP);
 
 		// Input direction relative to the camera, on the ground plane.
 		const fwd = (pressed('KeyW', 'ArrowUp') ? 1 : 0) - (pressed('KeyS', 'ArrowDown') ? 1 : 0);
@@ -143,10 +143,8 @@
 		if (!body || !camera || !visual) return;
 		const p = body.translation();
 
-		// Face the heading; on the board, also lean with the ground.
-		qYaw.setFromAxisAngle(UP, heading);
-		if (game.skating) qYaw.premultiply(qTilt.setFromUnitVectors(UP, groundNormal));
-		visual.quaternion.slerp(qYaw, 1 - Math.exp(-15 * dt));
+		// Only turn around the vertical axis: the character never tips over.
+		visual.rotation.y = heading;
 
 		// Third-person camera, pulled in when a wall is in the way.
 		target.lerp(tmpV.set(p.x, p.y + 0.6, p.z), 1 - Math.exp(-12 * dt));
@@ -176,7 +174,7 @@
 		// Nearest interactive spot in range.
 		let near: string | null = null;
 		let best = Infinity;
-		for (const { slug, poi } of projects) {
+		for (const { slug, poi } of spots) {
 			const d = Math.hypot(p.x - poi.position[0], p.z - poi.position[2]);
 			if (d < Math.max(poi.size[0], poi.size[2]) / 2 + 2.5 && d < best) {
 				near = slug;
@@ -256,7 +254,9 @@
 </T>
 
 <T.Group position={spawn}>
-	<RigidBody bind:rigidBody={body} lockRotations ccd canSleep={false}>
+	<!-- enabledRotations, not lockRotations: threlte applies enabledRotations
+	     (default all true) after lockRotations, which silently unlocks them. -->
+	<RigidBody bind:rigidBody={body} enabledRotations={[false, false, false]} ccd canSleep={false}>
 		<Collider
 			shape="capsule"
 			args={[HALF_HEIGHT, RADIUS]}

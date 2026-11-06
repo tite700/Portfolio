@@ -30,12 +30,12 @@
 
 <T.Group {position} {scale}>
 	<T.Mesh position.y={1.5} castShadow>
-		<T.CylinderGeometry args={[0.3, 0.4, 3, 6]} />
+		<T.CylinderGeometry args={[0.3, 0.4, 3, 8]} />
 		<T.MeshLambertMaterial color="#6b4226" />
 	</T.Mesh>
 	{#each blobs as [p, r], i (i)}
 		<T.Mesh position={p} castShadow>
-			<T.IcosahedronGeometry args={[r, 0]} />
+			<T.IcosahedronGeometry args={[r, 1]} />
 			<T.MeshLambertMaterial color={leaves} flatShading />
 		</T.Mesh>
 	{/each}
