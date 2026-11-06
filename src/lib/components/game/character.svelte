@@ -3,7 +3,14 @@
 	import type { Group } from 'three';
 	import Box from './box.svelte';
 
-	type Anim = { speed: number; skating: boolean; grounded: boolean };
+	// trick: progress of a skate trick (0 → 1, < 0: none); flip: -1 / 1 for heel / kick flips.
+	type Anim = {
+		speed: number;
+		skating: boolean;
+		grounded: boolean;
+		trick: number;
+		flip: number;
+	};
 
 	// Chibi low-poly character, feet at y = 0, facing +z.
 	// Without `anim` it stays still (used by the statue).
@@ -21,8 +28,17 @@
 		if (!anim || !legL || !legR || !armL || !armR) return;
 		let leg = 0;
 		let armOut = 0.1;
+		let tuckL = 0;
+		let tuckR = 0;
 		if (anim.skating) {
 			armOut = 1.1;
+			if (anim.trick >= 0) {
+				// Knees up while the board turns under the feet, arms out for balance.
+				const s = Math.sin(anim.trick * Math.PI);
+				tuckL = s * (1.1 + 0.3 * anim.flip);
+				tuckR = s * (1.1 - 0.3 * anim.flip);
+				armOut = 1.1 + s * 1.2;
+			}
 		} else if (!anim.grounded) {
 			leg = 0.6;
 			armOut = 2.4;
@@ -31,8 +47,8 @@
 			phase += dt * (3 + 9 * s);
 			leg = Math.sin(phase) * 0.8 * s;
 		}
-		legL.rotation.x = leg;
-		legR.rotation.x = -leg;
+		legL.rotation.x = leg - tuckL;
+		legR.rotation.x = -leg - tuckR;
 		armL.rotation.set(-leg, 0, -armOut);
 		armR.rotation.set(leg, 0, armOut);
 	});

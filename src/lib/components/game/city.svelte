@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { T } from '@threlte/core';
 	import { RigidBody, Collider } from '@threlte/rapier';
-	import { spots, type Section, type Vec3 } from '$lib/content';
+	import { SPAWN, esplanades, sections, spots, type Section, type Vec3 } from '$lib/content';
+	import { level, rad } from '$lib/level';
 	import Block from './block.svelte';
 	import Building from './building.svelte';
 	import Poi from './poi.svelte';
@@ -10,136 +11,163 @@
 	import Sign from './sign.svelte';
 	import Tree from './tree.svelte';
 
-	// 3×3 city blocks of 36m, centers at -48 / 0 / 48, separated by 12m roads.
-	// One district per column: hobbies west, student & personal projects in the middle,
-	// professional work east. No buildings inside the city, for a clear view.
-	// `sign`: distance from the block center to its district sign (17 = on the edge).
-	const S = 48;
-	const blocks: { c: [number, number]; ground: string; sign?: number }[] = [
-		{ c: [-S, -S], ground: '#86c06c' }, // hobbies: park (football, books)
-		{ c: [-S, 0], ground: '#d1d5db' }, // hobbies: skatepark (snowboard, gaming)
-		{ c: [-S, S], ground: '#e9d8a6' }, // hobbies: beach (volley, council)
-		{ c: [0, -S], ground: '#86c06c' }, // projects: garden (sakura, gacha, arcade)
-		{ c: [0, 0], ground: '#e7d7b8' }, // plaza: spawn
-		{ c: [0, S], ground: '#cbd5e1', sign: 12 }, // projects: statue, awale, hand, range, toaster
-		{ c: [S, -S], ground: '#cbd5e1' }, // work: Albyon
-		{ c: [S, 0], ground: '#cbd5e1' }, // work: Albyon
-		{ c: [S, S], ground: '#86c06c' } // work: Crimson XR, Widid
-	];
+	// A grass park: the spawn plaza in the middle, one octagonal esplanade per section
+	// around it, and skate obstacles, trees and bushes from level.json (edit them in /editor).
+	const plaza: [number, number] = [SPAWN[0], SPAWN[2]];
 
-	// A district sign on the edge of every block (except the plaza), facing the middle.
-	const signs = blocks
-		.filter(({ c }) => c[0] || c[1])
-		.map(({ c, sign = 17 }) => {
-			const d = c[0] ? [-Math.sign(c[0]), 0] : [0, -Math.sign(c[1])];
-			const section: Section = c[0] < 0 ? 'hobbies' : c[0] > 0 ? 'work' : 'projects';
-			return {
-				position: [c[0] + d[0] * sign, 0, c[1] + d[1] * sign] as Vec3,
-				rotationY: Math.atan2(d[0], d[1]),
-				section
-			};
-		});
+	const districts = (Object.keys(esplanades) as Section[]).map((section) => {
+		const { center, radius } = esplanades[section];
+		// Direction from the esplanade toward the plaza: the entrance side.
+		const dx = plaza[0] - center[0];
+		const dz = plaza[1] - center[1];
+		const d = Math.hypot(dx, dz);
+		const entrance = Math.atan2(dx, dz);
+		const out = (r: number): Vec3 => [center[0] + (dx / d) * r, 0, center[1] + (dz / d) * r];
+		return {
+			section,
+			center,
+			size: radius + 6,
+			sign: { position: out(radius + 8), rotationY: entrance, section },
+			// Stone path from the plaza to the esplanade.
+			path: { position: out(d / 2), length: d, angle: entrance },
+			lamps: Array.from({ length: 8 }, (_, i) => {
+				const a = entrance + ((i + 0.5) / 8) * Math.PI * 2;
+				return [center[0] + Math.sin(a) * (radius + 5), center[1] + Math.cos(a) * (radius + 5)];
+			})
+		};
+	});
 
-	// Deterministic pseudo-random so the city is the same on every load.
+	// Deterministic pseudo-random so the park is the same on every load.
 	let seed = 7;
 	const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 	const colors = ['#f4a261', '#e9c46a', '#a8dadc', '#ffb4a2', '#cdb4db', '#bde0fe', '#ffd6a5'];
 	const pick = () => colors[Math.floor(rand() * colors.length)];
 
-	// Ring of tall buildings closing the city.
+	// Ring of buildings closing the park.
 	const buildings: { position: Vec3; size: Vec3; color: string }[] = [];
-	for (let i = -78; i <= 78; i += 13) {
+	for (let i = -60; i <= 60; i += 12) {
 		for (const [x, z] of [
-			[i, -86],
-			[i, 86],
-			[-86, i],
-			[86, i]
+			[i, -72],
+			[i, 72],
+			[-72, i],
+			[72, i]
 		]) {
-			buildings.push({ position: [x, 0, z], size: [13, 18 + rand() * 15, 13], color: pick() });
+			buildings.push({ position: [x, 0, z], size: [12, 12 + rand() * 14, 12], color: pick() });
 		}
 	}
-
-	const parkTrees: Vec3[] = [
-		[-60, 0, -60],
-		[-36, 0, -60],
-		[-60, 0, -36],
-		[-36, 0, -36],
-		[-12, 0, -12],
-		[12, 0, -12],
-		[-12, 0, 12],
-		[12, 0, 12],
-		[-13, 0, -40],
-		[13, 0, -40],
-		[-6, 0, -63],
-		[6, 0, -63],
-		[56, 0, 60],
-		[40, 0, 38]
-	];
 </script>
 
 <T.Color attach="background" args={['#9fd8ff']} />
-<T.Fog attach="fog" args={['#9fd8ff', 50, 140]} />
+<T.Fog attach="fog" args={['#9fd8ff', 45, 120]} />
 <T.HemisphereLight args={['#ffffff', '#8a9a7a', 1.4]} />
 
-<!-- Asphalt everywhere, block grounds on top (visual only) -->
-<Block position={[0, -0.5, 0]} size={[200, 1, 200]} color="#4b5563" />
-{#each blocks as { c, ground }, i (i)}
-	<T.Mesh position={[c[0], 0.02, c[1]]} rotation.x={-Math.PI / 2} receiveShadow>
-		<T.PlaneGeometry args={[36, 36]} />
-		<T.MeshLambertMaterial color={ground} />
+<!-- Grass ground -->
+<Block position={[0, -0.5, 0]} size={[160, 1, 160]} color="#86c06c" />
+
+{#snippet octagon(x: number, z: number, r: number, y: number, color: string)}
+	<T.Mesh position={[x, y, z]} rotation.y={Math.PI / 8} receiveShadow>
+		<T.CylinderGeometry args={[r, r, 0.02, 8]} />
+		<T.MeshLambertMaterial {color} />
 	</T.Mesh>
-{/each}
+{/snippet}
 
-{#each buildings as b, i (i)}
-	<Building {...b} />
-{/each}
+{#snippet lamp(x: number, z: number)}
+	<T.Group position={[x, 0, z]}>
+		<T.Group position.y={2}>
+			<RigidBody type="fixed">
+				<Collider shape="cylinder" args={[2, 0.15]} />
+			</RigidBody>
+		</T.Group>
+		<T.Mesh position.y={2} castShadow>
+			<T.CylinderGeometry args={[0.08, 0.12, 4, 8]} />
+			<T.MeshLambertMaterial color="#334155" />
+		</T.Mesh>
+		<T.Mesh position.y={4.15}>
+			<T.CylinderGeometry args={[0.15, 0.3, 0.35, 6]} />
+			<T.MeshBasicMaterial color="#fef08a" />
+		</T.Mesh>
+		<T.Mesh position.y={4.4}>
+			<T.ConeGeometry args={[0.35, 0.25, 6]} />
+			<T.MeshLambertMaterial color="#334155" flatShading />
+		</T.Mesh>
+	</T.Group>
+{/snippet}
 
-{#each parkTrees as position, i (i)}
-	<Tree {position} leaves={i < 4 ? '#f9a8d4' : '#4ade80'} />
+<!-- Spawn plaza -->
+{@render octagon(plaza[0], plaza[1], 8, 0.03, '#e7d7b8')}
+
+{#each districts as d (d.section)}
+	<T.Mesh position={d.path.position} rotation.y={d.path.angle} receiveShadow>
+		<T.BoxGeometry args={[4, 0.04, d.path.length]} />
+		<T.MeshLambertMaterial color="#d6c7a8" />
+	</T.Mesh>
+	<!-- Esplanade: section-colored border, stone floor, a planter in the middle -->
+	{@render octagon(d.center[0], d.center[1], d.size + 0.8, 0.035, sections[d.section].color)}
+	{@render octagon(d.center[0], d.center[1], d.size, 0.045, '#e7d7b8')}
+	<T.Group position={[d.center[0], 0.3, d.center[1]]}>
+		<RigidBody type="fixed">
+			<Collider shape="cylinder" args={[0.3, 2.7]} />
+		</RigidBody>
+		<T.Mesh rotation.y={Math.PI / 8} castShadow receiveShadow>
+			<T.CylinderGeometry args={[2.6, 2.8, 0.6, 8]} />
+			<T.MeshLambertMaterial color="#a8a29e" flatShading />
+		</T.Mesh>
+		<T.Mesh position.y={0.31} rotation.y={Math.PI / 8}>
+			<T.CylinderGeometry args={[2.3, 2.3, 0.02, 8]} />
+			<T.MeshLambertMaterial color="#4d7c0f" />
+		</T.Mesh>
+	</T.Group>
+	<Tree
+		position={[d.center[0], 0.6, d.center[1]]}
+		scale={0.9}
+		leaves={sections[d.section].color}
+		collider={false}
+	/>
+	<Sign {...d.sign} />
+	{#each d.lamps as [x, z], i (i)}
+		{@render lamp(x, z)}
+	{/each}
 {/each}
 
 {#each spots as spot (spot.slug)}
 	<Poi {spot} />
 {/each}
 
-<!-- Street lamps at every block corner -->
-{#each blocks as { c }, i (i)}
-	{#each [[-17, -17], [17, -17], [-17, 17], [17, 17]] as [dx, dz] (`${dx}${dz}`)}
-		<T.Group position={[c[0] + dx, 0, c[1] + dz]}>
-			<T.Group position.y={2}>
-				<RigidBody type="fixed">
-					<Collider shape="cylinder" args={[2, 0.15]} />
-				</RigidBody>
-			</T.Group>
-			<T.Mesh position.y={2} castShadow>
-				<T.CylinderGeometry args={[0.08, 0.12, 4, 8]} />
-				<T.MeshLambertMaterial color="#334155" />
-			</T.Mesh>
-			<T.Mesh position.y={4.15}>
-				<T.CylinderGeometry args={[0.15, 0.3, 0.35, 6]} />
-				<T.MeshBasicMaterial color="#fef08a" />
-			</T.Mesh>
-			<T.Mesh position.y={4.4}>
-				<T.ConeGeometry args={[0.35, 0.25, 6]} />
-				<T.MeshLambertMaterial color="#334155" flatShading />
-			</T.Mesh>
-		</T.Group>
-	{/each}
+{#each buildings as b, i (i)}
+	<Building {...b} />
 {/each}
-
-{#each signs as sign, i (i)}
-	<Sign {...sign} />
+<!-- Objects placed in the level editor -->
+{#each level.objects as o, i (i)}
+	{#if o.type === 'ramp'}
+		<Ramp
+			position={[o.x, 0, o.z]}
+			rotationY={rad(o.rotation)}
+			run={o.run}
+			height={o.height}
+			width={o.width}
+			color={o.color}
+		/>
+	{:else if o.type === 'quarterpipe'}
+		<QuarterPipe
+			position={[o.x, 0, o.z]}
+			rotationY={rad(o.rotation)}
+			radius={o.radius}
+			width={o.width}
+			color={o.color}
+		/>
+	{:else if o.type === 'block'}
+		<Block
+			position={[o.x, o.height / 2, o.z]}
+			rotation={[0, rad(o.rotation), 0]}
+			size={[o.width, o.height, o.depth]}
+			color={o.color}
+		/>
+	{:else if o.type === 'tree'}
+		<Tree position={[o.x, 0, o.z]} scale={o.scale} leaves={o.pink ? '#f9a8d4' : '#4ade80'} />
+	{:else if o.type === 'bush'}
+		<T.Mesh position={[o.x, 0.3, o.z]} castShadow>
+			<T.IcosahedronGeometry args={[0.6, 0]} />
+			<T.MeshLambertMaterial color={o.color} flatShading />
+		</T.Mesh>
+	{/if}
 {/each}
-
-<!-- Skatepark, in the hobbies district (built around (0, -48), moved to (-48, 0)) -->
-<T.Group position={[-S, 0, S]}>
-	<Ramp position={[0, 0, -32]} run={4} height={1} width={4} />
-	<QuarterPipe position={[8, 0, -48]} rotationY={-Math.PI / 2} radius={3.5} width={10} />
-	<QuarterPipe position={[-8, 0, -48]} rotationY={Math.PI / 2} radius={3.5} width={10} />
-	<Ramp position={[0, 0, -56]} run={3} height={1} width={5} color="#f97316" />
-	<Block position={[0, 0.5, -60]} size={[5, 1, 2]} color="#64748b" />
-	<Ramp position={[0, 0, -64]} rotationY={Math.PI} run={3} height={1} width={5} color="#f97316" />
-</T.Group>
-
-<!-- Shooting range counter -->
-<Block position={[-10, 0.5, 61]} size={[7, 1, 0.6]} color="#92400e" />

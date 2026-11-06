@@ -1,6 +1,10 @@
 // Game state shared between the 3D scene and the HTML overlay.
 export const game = $state({
 	skating: false,
+	/** Player on the ground plane, for the minimap. */
+	player: { x: 0, z: 0, heading: Math.PI },
+	/** Last trick done in the air, shown as a popup (`id` restarts its animation). */
+	trick: null as { name: string; combo: number; id: number } | null,
 	/** Project whose spot the player is standing next to. */
 	nearSlug: null as string | null,
 	/** Project open in the overlay. */

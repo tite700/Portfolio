@@ -5,7 +5,7 @@
 		CoefficientCombineRule,
 		type RigidBody as RapierRigidBody
 	} from '@dimforge/rapier3d-compat';
-	import { Group, Object3D, PerspectiveCamera, Vector3 } from 'three';
+	import { Group, Object3D, PerspectiveCamera, Quaternion, Vector3 } from 'three';
 	import Box from './box.svelte';
 	import Character from './character.svelte';
 	import { game } from './state.svelte';
@@ -21,6 +21,13 @@
 	const SKATE_MAX = 15;
 	const SKATE_TURN = 2.8; // rad/s
 	const JUMP_SPEED = 7.5;
+	const TRICK_TIME = 0.45; // s
+	const TRICK_BOOST = 3; // m/s for the first trick of a jump, halved for each next one
+	const TRICKS = [
+		{ name: 'Kickflip', axis: 'z', turn: 1 },
+		{ name: 'Heelflip', axis: 'z', turn: -1 },
+		{ name: '360 Shove-it', axis: 'y', turn: 1 }
+	] as const;
 	const MOUSE_SENSITIVITY = 0.0025;
 	const HALF_HEIGHT = 0.45;
 	const RADIUS = 0.35;
@@ -32,6 +39,7 @@
 	let body = $state<RapierRigidBody>();
 	let camera = $state<PerspectiveCamera>();
 	let visual = $state<Group>();
+	let board = $state<Group>();
 	const lightTarget = new Object3D();
 
 	// Camera orbit around the player.
@@ -43,7 +51,13 @@
 
 	let heading = Math.PI; // facing direction: (sin, cos) → starts toward -z
 	let grounded = false;
-	const anim = { speed: 0, skating: false, grounded: true };
+	// Ground under the player (up to 2.5 m below), to lean on slopes and before landing.
+	const groundNormal = new Vector3(0, 1, 0);
+	let groundBelow = Infinity;
+	// Current trick in the air (time < 0: none) and tricks done since the last landing.
+	let trick: { time: number; move: (typeof TRICKS)[number] } = { time: -1, move: TRICKS[0] };
+	let combo = 0;
+	const anim = { speed: 0, skating: false, grounded: true, trick: -1, flip: 0 };
 
 	// event.code = physical key, so ZQSD (AZERTY) and WASD (QWERTY) both work.
 	const keys = new Set<string>();
@@ -51,6 +65,10 @@
 	const pressed = (...codes: string[]) => codes.some((c) => keys.has(c));
 
 	const tmpV = new Vector3();
+	const UP = new Vector3(0, 1, 0);
+	const axis = new Vector3();
+	const qYaw = new Quaternion();
+	const qTilt = new Quaternion();
 
 	// Rotate angle `a` toward `b` by at most `step`.
 	function turnToward(a: number, b: number, step: number) {
@@ -76,14 +94,22 @@
 
 		const hit = world.castRayAndGetNormal(
 			new rapier.Ray(p, { x: 0, y: -1, z: 0 }),
-			FOOT + 0.25,
+			FOOT + 2.5,
 			true,
 			undefined,
 			undefined,
 			undefined,
 			body
 		);
-		grounded = !!hit && hit.normal.y > 0.3;
+		const floor = hit && hit.normal.y > 0.3 ? hit : null;
+		grounded = !!floor && floor.timeOfImpact <= FOOT + 0.25;
+		groundBelow = floor ? floor.timeOfImpact - FOOT : Infinity;
+		if (floor) groundNormal.set(floor.normal.x, floor.normal.y, floor.normal.z);
+		else groundNormal.copy(UP);
+		if (grounded) {
+			combo = 0;
+			trick.time = -1;
+		}
 
 		// Input direction relative to the camera, on the ground plane.
 		const fwd = (pressed('KeyW', 'ArrowUp') ? 1 : 0) - (pressed('KeyS', 'ArrowDown') ? 1 : 0);
@@ -116,6 +142,8 @@
 				// Wheels: kill sideways slide and carve velocity with the board.
 				l *= Math.exp(-10 * dt);
 				f *= Math.exp(-0.15 * dt);
+				// Speed above the max (trick boosts) wears off little by little.
+				if (f > SKATE_MAX) f += (SKATE_MAX - f) * (1 - Math.exp(-1.2 * dt));
 				hx = Math.sin(heading);
 				hz = Math.cos(heading);
 				vx = hx * f + hz * l;
@@ -131,6 +159,15 @@
 		if (jumpQueued) {
 			jumpQueued = false;
 			if (grounded) vy = JUMP_SPEED;
+			else if (game.skating && trick.time < 0) {
+				// Trick in the air: a forward kick that gets smaller with each trick of the jump.
+				const boost = TRICK_BOOST * 0.5 ** combo;
+				vx += Math.sin(heading) * boost;
+				vz += Math.cos(heading) * boost;
+				combo++;
+				trick = { time: 0, move: TRICKS[Math.floor(Math.random() * TRICKS.length)] };
+				game.trick = { name: trick.move.name, combo, id: (game.trick?.id ?? 0) + 1 };
+			}
 		}
 		body.setLinvel({ x: vx, y: vy, z: vz }, true);
 
@@ -143,8 +180,33 @@
 		if (!body || !camera || !visual) return;
 		const p = body.translation();
 
-		// Only turn around the vertical axis: the character never tips over.
-		visual.rotation.y = heading;
+		// Lean like a skater (visual only, the physics body never rotates): match the slope
+		// on the ground and right before landing, follow the trajectory in the air.
+		const v = body.linvel();
+		qYaw.setFromAxisAngle(UP, heading);
+		if (!game.skating) qTilt.identity();
+		else if (grounded || (v.y < 0 && groundBelow < 1.5)) qTilt.setFromUnitVectors(UP, groundNormal);
+		else {
+			const nose = Math.max(-0.5, Math.min(0.5, Math.atan2(v.y, Math.hypot(v.x, v.z) + 1) * 0.6));
+			axis.set(Math.cos(heading), 0, -Math.sin(heading));
+			qTilt.setFromAxisAngle(axis, -nose);
+		}
+		visual.quaternion.slerp(qTilt.multiply(qYaw), 1 - Math.exp(-(grounded ? 15 : 5) * dt));
+
+		// Trick: the board flips or spins once under the feet, popping up a bit.
+		if (trick.time >= 0) {
+			trick.time += dt;
+			if (trick.time >= TRICK_TIME) trick.time = -1;
+		}
+		if (board) {
+			const t = trick.time < 0 ? 0 : trick.time / TRICK_TIME;
+			const ease = t * t * (3 - 2 * t);
+			board.rotation.set(0, 0, 0);
+			board.rotation[trick.move.axis] = ease * Math.PI * 2 * trick.move.turn;
+			board.position.y = 0.1 + Math.sin(t * Math.PI) * 0.3;
+		}
+		anim.trick = trick.time < 0 ? -1 : trick.time / TRICK_TIME;
+		anim.flip = trick.move.axis === 'z' ? trick.move.turn : 0;
 
 		// Third-person camera, pulled in when a wall is in the way.
 		target.lerp(tmpV.set(p.x, p.y + 0.6, p.z), 1 - Math.exp(-12 * dt));
@@ -170,6 +232,9 @@
 
 		// Shadows follow the player.
 		lightTarget.position.set(p.x, p.y, p.z);
+		game.player.x = p.x;
+		game.player.z = p.z;
+		game.player.heading = heading;
 
 		// Nearest interactive spot in range.
 		let near: string | null = null;
@@ -266,10 +331,12 @@
 		<T.Group position.y={-FOOT} bind:ref={visual}>
 			{#if game.skating}
 				<!-- Skateboard -->
-				<Box size={[0.32, 0.05, 0.95]} position={[0, 0.12, 0]} color="#f97316" />
-				{#each [-0.33, 0.33] as z (z)}
-					<Box size={[0.34, 0.08, 0.1]} position={[0, 0.05, z]} color="#f8fafc" />
-				{/each}
+				<T.Group position.y={0.1} bind:ref={board}>
+					<Box size={[0.32, 0.05, 0.95]} position={[0, 0.02, 0]} color="#f97316" />
+					{#each [-0.33, 0.33] as z (z)}
+						<Box size={[0.34, 0.08, 0.1]} position={[0, -0.05, z]} color="#f8fafc" />
+					{/each}
+				</T.Group>
 			{/if}
 			<T.Group position.y={game.skating ? 0.15 : 0} rotation.y={game.skating ? -1.2 : 0}>
 				<Character {anim} />

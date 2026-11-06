@@ -4,8 +4,9 @@
 	import { NoToneMapping, WebGLRenderer } from 'three';
 	import City from '$lib/components/game/city.svelte';
 	import Player from '$lib/components/game/player.svelte';
+	import Minimap from '$lib/components/minimap.svelte';
 	import { game } from '$lib/components/game/state.svelte';
-	import { href, spots } from '$lib/content';
+	import { SPAWN, href, spots } from '$lib/content';
 
 	const open = $derived(spots.find((s) => s.slug === game.openSlug));
 
@@ -20,16 +21,31 @@
 	<Canvas dpr={0.5} toneMapping={NoToneMapping} {createRenderer}>
 		<World gravity={[0, -20, 0]}>
 			<City />
-			<Player spawn={[0, 1, 12]} />
+			<Player spawn={SPAWN} />
 		</World>
 	</Canvas>
+
+	<div class="absolute right-4 top-4"><Minimap /></div>
+
+	{#if game.trick}
+		{#key game.trick.id}
+			<p
+				class="trick pointer-events-none absolute inset-x-0 top-1/4 text-center font-display text-5xl font-bold text-yellow-300"
+			>
+				{game.trick.name}!
+				{#if game.trick.combo > 1}<span class="text-3xl">×{game.trick.combo}</span>{/if}
+			</p>
+		{/key}
+	{/if}
 
 	<div
 		class="pointer-events-none absolute left-4 top-4 rounded-md bg-black/50 px-3 py-2 text-sm text-white"
 	>
 		<p>Click to grab the mouse · Esc to release · R: respawn</p>
 		<p>
-			ZQSD / WASD: move · Space: jump · Shift: {game.skating ? 'get off' : 'get on'} the skateboard
+			ZQSD / WASD: move · Space: jump (again in the air on the board: trick) · Shift: {game.skating
+				? 'get off'
+				: 'get on'} the skateboard
 		</p>
 		<p>Walk up to the glowing markers and left click to open them</p>
 	</div>
@@ -64,5 +80,29 @@
 <style>
 	.game :global(canvas) {
 		image-rendering: pixelated;
+	}
+	/* Trick popup: pops in, holds, floats away. */
+	.trick {
+		text-shadow: 3px 3px 0 #0c4a6e;
+		animation: trick-pop 1.2s ease-out forwards;
+	}
+	@keyframes trick-pop {
+		0% {
+			opacity: 0;
+			transform: scale(0.5);
+		}
+		15% {
+			opacity: 1;
+			transform: scale(1.15);
+		}
+		30%,
+		75% {
+			opacity: 1;
+			transform: scale(1);
+		}
+		100% {
+			opacity: 0;
+			transform: translateY(-1.5rem) scale(1);
+		}
 	}
 </style>

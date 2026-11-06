@@ -12,9 +12,21 @@ A personal portfolio site built with SvelteKit, with interactive 3D pages powere
 | `/projects`         | Student and personal projects, articles at `/projects/[slug]`           |
 | `/hobbies`          | Hobby cards, each with an article page at `/hobbies/[slug]`             |
 | `/resume`           | Experience, education, skills, contact and the CV (`static/cv/`)        |
+| `/editor`           | Level editor for the playground map (dev server only)                   |
 | `/awale/awale.html` | The AR Awale game (static, A-Frame)                                      |
 
-Work, projects and hobbies live in `src/lib/content.ts`. The city has one district per section: hobbies west (x = -48), projects in the middle, work east (x = 48), each marked by signs and colored markers. Each entry has its article text and its spot in the city (`poi`); its 3D model is drawn by `src/lib/components/game/model.svelte` and shown both in the city and in the article's showcase.
+Work, projects and hobbies live in `src/lib/content.ts`. The city is a park with the spawn plaza in the middle and one octagonal esplanade per section around it. Its layout lives in `src/lib/level.json`: spawn, esplanades, the place of every spot, and the objects (ramps, quarter pipes, blocks, trees, bushes). Lamps, signs and paths follow their esplanade. A new spot that is not in `level.json` yet goes on a ring around its esplanade.
+
+### Level editor
+
+Run `npm run dev` and open `/editor`: a top-down view of the map.
+
+- **Drag** an element to move it (snapped to 0.5 m, hold **Alt** for 0.1 m). Dragging an esplanade carries its spots along. Drag the background to pan, use the wheel to zoom.
+- **R / Shift+R**: rotate by 15°. **Del**: delete. **Ctrl+D**: duplicate. **Ctrl+Z**: undo.
+- The side panel edits the selection's fields (position, size, color…) and adds new objects.
+- **Save** (or **Ctrl+S**) writes `src/lib/level.json`; an open `/playground` tab reloads by itself. Commit the file like any other code.
+
+The editor and its save endpoint return 404 in production.
 
 ### Game controls
 

@@ -386,24 +386,31 @@
 		</T.Mesh>
 	</T.Group>
 {:else if kind === 'loot'}
-	<Box size={[1.4, 0.7, 0.9]} position={[0, 0.35, 0]} color="#92400e" />
-	<!-- Rounded lid: half a cylinder lying along x -->
-	<T.Mesh position.y={0.7} rotation.z={Math.PI / 2} castShadow>
-		<T.CylinderGeometry args={[0.45, 0.45, 1.4, 12, 1, false, 0, Math.PI]} />
-		<T.MeshLambertMaterial color="#a16207" side={2} />
+	<!-- Diamond ore: a faceted rock with gems poking out, rubble and a pickaxe -->
+	<T.Mesh position.y={0.55} scale={[1, 0.8, 0.9]} castShadow receiveShadow>
+		<T.IcosahedronGeometry args={[0.8, 0]} />
+		<T.MeshLambertMaterial color="#78716c" flatShading />
 	</T.Mesh>
-	{#each [-0.5, 0.5] as x (x)}
-		<Box size={[0.1, 0.72, 0.92]} position={[x, 0.36, 0]} color="#facc15" />
+	{#each [[0.45, 0.55, 0.5], [-0.4, 0.75, 0.45], [0.1, 1.05, 0.2], [0.55, 0.35, -0.3], [-0.5, 0.45, -0.4], [-0.1, 0.9, -0.45]] as [x, y, z], i (i)}
+		<T.Mesh
+			position={[x, y, z]}
+			rotation={[Math.atan2(z, y - 0.55), 0, -Math.atan2(x, y - 0.55)]}
+			scale={[1, 1.7, 1]}
+		>
+			<T.OctahedronGeometry args={[0.13 + (i % 3) * 0.04, 0]} />
+			<T.MeshLambertMaterial color="#67e8f9" emissive="#0891b2" flatShading />
+		</T.Mesh>
 	{/each}
-	<Box size={[0.18, 0.22, 0.06]} position={[0, 0.65, 0.46]} color="#facc15" />
-	{#each [[-0.3, 0.75], [0.1, 0.85], [0.45, 0.7], [0.25, 0.95]] as [x, z] (x)}
-		{@render cyl(0.08, 0.03, [x, 0.02, z], '#facc15', [0, 0, 0], 10)}
+	{#each [[0.9, 0.5], [-0.8, 0.7], [0.3, -0.85]] as [x, z] (x)}
+		<T.Mesh position={[x, 0.12, z]}>
+			<T.DodecahedronGeometry args={[0.16, 0]} />
+			<T.MeshLambertMaterial color="#a8a29e" flatShading />
+		</T.Mesh>
 	{/each}
-	<!-- Pickaxe -->
-	{@render cyl(0.03, 1, [-0.85, 0.48, 0.3], '#78350f', [0, 0, 0.3], 6)}
+	{@render cyl(0.03, 1, [-0.95, 0.48, 0.55], '#78350f', [0, 0, 0.3], 6)}
 	<Box
 		size={[0.5, 0.08, 0.08]}
-		position={[-0.99, 0.95, 0.3]}
+		position={[-1.09, 0.95, 0.55]}
 		rotation={[0, 0, 0.3]}
 		color="#94a3b8"
 	/>
