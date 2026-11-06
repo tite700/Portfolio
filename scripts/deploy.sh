@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Build the static site and upload it to davidb.iiens.net with scp.
+# Build the static site and upload it to davidb.iiens.net (ARISE "perso" hosting,
+# which serves ~/html) with scp.
 #
-#   npm run deploy                          # build the deploy/ folder only, to check it
-#   npm run deploy -- login@host:folder     # build it and upload it there
+#   npm run deploy                                   # build deploy/ only, to check it
+#   npm run deploy -- ARISEID@perso3.iiens.net:html  # build it and upload it into ~/html
 #
 # Layout of deploy/:
 #   /            the new site (static export of `npm run build`)
@@ -48,10 +49,17 @@ article_Sign_VR.html /projects/sign-vr/
 article_toastercat.html /projects/toastercat/
 MAP
 
+# Permissions recommended by ARISE (scp keeps them): folders rwxr-xr-x,
+# static files rw-r-----, PHP files rw-------.
+find deploy -type d -exec chmod 755 {} +
+find deploy -type f -exec chmod 640 {} +
+find deploy -type f -name '*.php' -exec chmod 600 {} +
+
 du -sh deploy
 if [ -n "$DEST" ]; then
-	scp -r deploy/. "$DEST"
+	# The contents of deploy/ go into the destination folder.
+	scp -r deploy/* "$DEST"
 	echo "Uploaded to $DEST"
 else
-	echo "deploy/ is ready. Upload it with: npm run deploy -- login@host:folder"
+	echo "deploy/ is ready. Upload it with: npm run deploy -- ARISEID@perso3.iiens.net:html"
 fi

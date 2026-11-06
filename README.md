@@ -107,8 +107,8 @@ It is hosted on `davidb.iiens.net`. `npm run deploy` builds it and assembles `de
 - `/portfolio/article_*.html` redirects from the previous site's article URLs to the new pages.
 
 ```bash
-npm run deploy                              # build deploy/ only, to check it
-npm run deploy -- login@host:remote/folder  # build it and upload it with scp -r
+npm run deploy                                    # build deploy/ only, to check it
+npm run deploy -- ARISEID@perso3.iiens.net:html  # build it and upload it into ~/html
 ```
 
 `scp` adds and overwrites files but never deletes, so files removed from the site stay on the server until you delete them there.
