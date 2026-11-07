@@ -2,13 +2,20 @@
 	import PageTitle from '$lib/components/page-title.svelte';
 	import SpotGrid from '$lib/components/spot-grid.svelte';
 	import { experiences, work } from '$lib/content';
+	import { sectionTitle, t, trExperience } from '$lib/i18n.svelte';
 </script>
 
-<svelte:head><title>Work · Baptiste David</title></svelte:head>
+<svelte:head><title>{sectionTitle('work')} · Baptiste David</title></svelte:head>
 
-<PageTitle title="Work" quote="My professional experiences in VR and game development." />
+<PageTitle
+	title={sectionTitle('work')}
+	quote={t(
+		'My professional experiences in VR and game development.',
+		'Mes expériences professionnelles en VR et en développement de jeux vidéo.'
+	)}
+/>
 
-{#each experiences as xp (xp.company)}
+{#each experiences.map(trExperience) as xp (xp.company)}
 	<section class="mx-auto max-w-6xl px-5 pt-8">
 		<div class="panel p-6">
 			<div class="flex flex-wrap items-baseline justify-between gap-2">

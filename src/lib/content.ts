@@ -125,7 +125,9 @@ export const projects = place('projects', [
 		title: 'Garden Gacha VR',
 		tags: ['Unity', 'C#', 'Blender'],
 		summary: 'A VR gacha game set in a garden: pull capsules and grow your collection.',
-		body: ['A VR gacha game set in a garden: pull capsules and grow your collection.'],
+		body: [
+			'An immersive VR gardening game with gacha mechanics and random seed generation, built around raising awareness of permaculture.'
+		],
 		links: [{ label: 'Play on itch.io', href: 'https://7benj7.itch.io/garden-gacha' }],
 		media: [`${IMG}/garden_gacha.png`],
 		poi: { kind: 'gacha', label: 'Gacha machine', size: [1.2, 2.2, 1.2] }
@@ -391,7 +393,7 @@ export const work = place('work', [
 				href: 'https://www.meta.com/experiences/loot/35024660313846255/'
 			},
 			{
-				label: 'Latest update',
+				label: 'Game Page',
 				href: 'https://www.meta.com/fr-fr/experiences/app/developer-post/38715509994729578/'
 			}
 		],
@@ -477,7 +479,7 @@ export const experiences: Experience[] = [
 	{
 		company: 'Albyon Studio',
 		role: 'VR / Gameplay Developer',
-		dates: 'May 2024 – today',
+		dates: 'May 2024 – Present',
 		place: 'Paris, France',
 		points: [
 			'Gameplay mechanics and VR interactions for several published VR games: Bear on Boat, Bear Scouts, LOOT and Plundr.',

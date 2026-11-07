@@ -1,15 +1,17 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { href, sections, type Spot } from '$lib/content';
+	import { href, type Spot } from '$lib/content';
+	import { sectionTitle, t, tr } from '$lib/i18n.svelte';
 	import Showcase from './showcase.svelte';
 
 	// Article page of a project or hobby; `list` is its section, for the back and prev/next links.
-	let { spot, list }: { spot: Spot; list: Spot[] } = $props();
+	let { spot: source, list }: { spot: Spot; list: Spot[] } = $props();
 
+	const spot = $derived(tr(source));
 	const i = $derived(list.findIndex((s) => s.slug === spot.slug));
-	const prev = $derived(list[(i - 1 + list.length) % list.length]);
-	const next = $derived(list[(i + 1) % list.length]);
-	const section = $derived(sections[spot.section].title);
+	const prev = $derived(tr(list[(i - 1 + list.length) % list.length]));
+	const next = $derived(tr(list[(i + 1) % list.length]));
+	const section = $derived(sectionTitle(spot.section));
 	const external = (url: string) => url.startsWith('http');
 </script>
 
@@ -29,7 +31,7 @@
 			</div>
 			<p class="mt-4 text-lg">{spot.summary}</p>
 			<a href="/playground" class="mt-4 text-sm font-bold text-sky-700 hover:underline">
-				Find it in the city ▶
+				{t('Find it in the city ▶', 'Le retrouver dans la ville ▶')}
 			</a>
 		</div>
 
@@ -39,7 +41,9 @@
 					<Showcase {spot} />
 				{/key}
 			{/if}
-			<p class="chip pointer-events-none absolute bottom-3 left-3">Drag to rotate</p>
+			<p class="chip pointer-events-none absolute bottom-3 left-3">
+				{t('Drag to rotate', 'Glissez pour tourner')}
+			</p>
 		</div>
 	</div>
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { href, type Spot } from '$lib/content';
+	import { tr } from '$lib/i18n.svelte';
 
 	let { spots }: { spots: Spot[] } = $props();
 
@@ -7,7 +8,7 @@
 </script>
 
 <div class="mx-auto grid max-w-6xl gap-6 p-5 sm:grid-cols-2 lg:grid-cols-3">
-	{#each spots as spot (spot.slug)}
+	{#each spots.map(tr) as spot (spot.slug)}
 		<a
 			href={href(spot)}
 			class="panel group overflow-hidden transition hover:-translate-y-1 hover:border-yellow-400"

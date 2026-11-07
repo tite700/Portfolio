@@ -4,12 +4,14 @@
 	import { RigidBody, Collider } from '@threlte/rapier';
 	import type { Mesh } from 'three';
 	import { sections, type Spot } from '$lib/content';
+	import { t, tr } from '$lib/i18n.svelte';
 	import Model from './model.svelte';
 	import { game } from './state.svelte';
 
 	// An interactive spot in the city: its model, a floating marker and a tooltip.
 	let { spot }: { spot: Spot } = $props();
-	const { kind, label, position, rotationY = 0, size } = spot.poi;
+	const { kind, position, rotationY = 0, size } = spot.poi;
+	const text = $derived(tr(spot));
 	const near = $derived(game.nearSlug === spot.slug);
 
 	let marker = $state<Mesh>();
@@ -40,10 +42,12 @@
 	{#if near}
 		<HTML position.y={size[1] + 1.6} center pointerEvents="none">
 			<div class="panel w-64 px-3 py-2">
-				<p class="text-xs font-bold uppercase tracking-wide text-sky-600">{label}</p>
-				<p class="font-bold">{spot.title}</p>
-				<p class="mt-1 text-xs">{spot.summary}</p>
-				<p class="mt-2 text-right text-xs font-bold text-sky-600">Left click to open ▶</p>
+				<p class="text-xs font-bold uppercase tracking-wide text-sky-600">{text.poi.label}</p>
+				<p class="font-bold">{text.title}</p>
+				<p class="mt-1 text-xs">{text.summary}</p>
+				<p class="mt-2 text-right text-xs font-bold text-sky-600">
+					{t('Left click to open ▶', 'Clic gauche pour ouvrir ▶')}
+				</p>
 			</div>
 		</HTML>
 	{/if}

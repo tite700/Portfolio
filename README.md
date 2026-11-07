@@ -17,6 +17,14 @@ A personal portfolio site built with SvelteKit, with interactive 3D pages powere
 
 Work, projects and hobbies live in `src/lib/content.ts`. The city is a park with the spawn plaza in the middle and one octagonal esplanade per section around it. Its layout lives in `src/lib/level.json`: spawn, esplanades, the place of every spot, and the objects (ramps, quarter pipes, blocks, trees, bushes). Lamps, signs and paths follow their esplanade. A new spot that is not in `level.json` yet goes on a ring around its esplanade.
 
+### English / French
+
+The site is in English and French, switched with the EN | FR button in the menu bar. Pages are prerendered in English; in the browser the language comes from `?lang=fr` / `?lang=en` in the URL, then the visitor's last choice, then the browser language.
+
+- UI text is written inline with `t('English', 'Français')` from `src/lib/i18n.svelte.ts`.
+- French versions of the projects, hobbies, work and experiences are in `src/lib/content.fr.ts`, by slug; a missing field falls back to English.
+- CV PDFs are `static/cv/Baptiste_David_CV_EN.pdf` and `…_FR.pdf`; the resume page offers the one of the current language.
+
 ### Level editor
 
 Run `npm run dev` and open `/editor`: a top-down view of the map.

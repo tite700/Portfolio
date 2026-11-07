@@ -1,50 +1,85 @@
 <script lang="ts">
 	import PageTitle from '$lib/components/page-title.svelte';
 	import { experiences } from '$lib/content';
+	import { cvHref, t, trExperience } from '$lib/i18n.svelte';
 
-	const education = [
+	const education = $derived([
 		{
-			years: 'Aug. 2023 – Jun. 2024',
-			title: 'Master’s Degree in Computer Science',
+			years: t('Aug. 2023 – Jun. 2024', 'Août 2023 – Juin 2024'),
+			title: t('Master’s Degree in Computer Science', 'Maîtrise en informatique'),
 			school: 'Université du Québec à Chicoutimi (Chicoutimi, Canada)',
-			text: 'Specialization in video game development. Double degree with ENSIIE.'
+			text: t(
+				'Specialization in video game development. Double degree with ENSIIE.',
+				'Spécialisation en développement de jeux vidéo. Double diplôme avec l’ENSIIE.'
+			)
 		},
 		{
-			years: 'Sept. 2021 – Jun. 2023',
-			title: 'Engineering Degree in Computer Science',
+			years: t('Sep. 2021 – Jun. 2023', 'Sept. 2021 – Juin 2023'),
+			title: t('Engineering Degree in Computer Science', 'Diplôme d’ingénieur en informatique'),
 			school: 'ENSIIE Paris-Saclay (Évry, France)',
-			text: 'École Nationale Supérieure d’Informatique pour l’Industrie et l’Entreprise. Specialization in digital interactions, video games and virtual reality.'
+			text: t(
+				'École Nationale Supérieure d’Informatique pour l’Industrie et l’Entreprise. Specialization in digital interactions, video games and virtual reality.',
+				'École Nationale Supérieure d’Informatique pour l’Industrie et l’Entreprise. Spécialisation interactions numériques, jeux vidéo et réalité virtuelle.'
+			)
 		},
 		{
-			years: 'Sept. 2019 – Jun. 2021',
-			title: 'Preparatory Classes (PCSI, PC*)',
+			years: t('Sep. 2019 – Jun. 2021', 'Sept. 2019 – Juin 2021'),
+			title: t('Preparatory Classes (PCSI, PC*)', 'Classes préparatoires (PCSI, PC*)'),
 			school: 'Lycée Fénelon Sainte-Marie (Paris, France)',
-			text: 'Preparatory classes for the selective entrance exams to engineering schools. Mathematics, physics and chemistry.'
+			text: t(
+				'Preparatory classes for the selective entrance exams to engineering schools. Mathematics, physics and chemistry.',
+				'Classes préparatoires aux grandes écoles. Mathématiques, physique et chimie.'
+			)
 		},
 		{
 			years: '2019',
-			title: 'Scientific Baccalauréat',
+			title: t('Scientific Baccalauréat', 'Baccalauréat scientifique'),
 			school: 'Lycée Notre-Dame (Boulogne-Billancourt, France)',
-			text: 'Biology, mathematics, physics, chemistry. Specialization in computer science.'
+			text: t(
+				'Biology, mathematics, physics, chemistry. Specialization in computer science.',
+				'Biologie, mathématiques, physique, chimie. Spécialité informatique.'
+			)
 		}
-	];
+	]);
 
 	// Level out of 10, drawn as an RPG stat bar.
-	const skills = [
+	const skills = $derived([
 		{ name: 'Unity', level: 8 },
 		{ name: 'C#', level: 8 },
 		{ name: 'Unreal Engine 5', level: 8 },
 		{ name: 'C++', level: 7 },
 		{ name: 'Blender', level: 7 },
-		{ name: 'Version control & planning (Git, Perforce, Trello)', level: 8 }
-	];
+		{
+			name: t(
+				'Version control & planning (Git, Perforce, Trello)',
+				'Gestion de version et planification (Git, Perforce, Trello)'
+			),
+			level: 8
+		}
+	]);
 
-	const toolbox = [
-		{ name: 'Languages', items: ['C#', 'C++', 'Python', 'PHP', 'HTML/CSS', 'TypeScript'] },
-		{ name: 'Engines & frameworks', items: ['Unity', 'Unreal Engine', 'XR Interaction Toolkit'] },
-		{ name: 'Tools', items: ['Git', 'Perforce', 'ClickUp', 'Trello', 'Blender', 'Cascadeur'] },
-		{ name: 'Spoken', items: ['French (native)', 'English (C2)', 'Spanish (B2)'] }
-	];
+	const toolbox = $derived([
+		{
+			name: t('Languages', 'Langages'),
+			items: ['C#', 'C++', 'Python', 'PHP', 'HTML/CSS', 'TypeScript']
+		},
+		{
+			name: t('Engines & frameworks', 'Moteurs et frameworks'),
+			items: ['Unity', 'Unreal Engine', 'XR Interaction Toolkit']
+		},
+		{
+			name: t('Tools', 'Outils'),
+			items: ['Git', 'Perforce', 'ClickUp', 'Trello', 'Blender', 'Cascadeur']
+		},
+		{
+			name: t('Spoken', 'Langues'),
+			items: [
+				t('French (native)', 'Français (natif)'),
+				t('English (C2)', 'Anglais (C2)'),
+				t('Spanish (B2)', 'Espagnol (B2)')
+			]
+		}
+	]);
 
 	const contacts = [
 		{ label: 'Email', href: 'mailto:baptistedavidpro92@gmail.com' },
@@ -53,25 +88,34 @@
 	];
 </script>
 
-<svelte:head><title>Resume · Baptiste David</title></svelte:head>
+<svelte:head><title>{t('Resume', 'CV')} · Baptiste David</title></svelte:head>
 
 <PageTitle
-	title="Resume"
-	quote="“A journey of a thousand miles begins with a single step.” – Lao Tzu"
+	title={t('Resume', 'CV')}
+	quote={t(
+		'“A journey of a thousand miles begins with a single step.” – Lao Tzu',
+		'« Un voyage de mille lieues commence toujours par un premier pas. » – Lao Tseu'
+	)}
 />
 
 <div class="mt-6 text-center">
-	<a class="btn-game" href="/cv/Baptiste_David_CV.pdf" download>Download my CV (PDF) ▼</a>
+	<a class="btn-game" href={cvHref()} download>
+		{t('Download my resume (PDF) ▼', 'Télécharger mon CV (PDF) ▼')}
+	</a>
 </div>
 
 <div class="mx-auto grid max-w-6xl gap-6 p-5 lg:grid-cols-[1.3fr_1fr]">
 	<div class="space-y-6">
 		<section class="panel space-y-5 p-6">
 			<div class="flex items-baseline justify-between">
-				<h2 class="font-display text-2xl font-bold text-sky-950">Experience</h2>
-				<a href="/work" class="text-sm font-bold text-sky-700 hover:underline">See the games ▶</a>
+				<h2 class="font-display text-2xl font-bold text-sky-950">
+					{t('Experience', 'Expérience')}
+				</h2>
+				<a href="/work" class="text-sm font-bold text-sky-700 hover:underline"
+					>{t('See the games ▶', 'Voir les jeux ▶')}</a
+				>
 			</div>
-			{#each experiences as xp (xp.company)}
+			{#each experiences.map(trExperience) as xp (xp.company)}
 				<div class="border-l-4 border-orange-400 pl-4">
 					<span class="chip">{xp.dates}</span>
 					<h3 class="mt-1 font-display text-xl font-bold">{xp.company}</h3>
@@ -86,7 +130,7 @@
 		</section>
 
 		<section class="panel space-y-5 p-6">
-			<h2 class="font-display text-2xl font-bold text-sky-950">Education</h2>
+			<h2 class="font-display text-2xl font-bold text-sky-950">{t('Education', 'Formation')}</h2>
 			{#each education as e (e.title)}
 				<div class="border-l-4 border-sky-400 pl-4">
 					<span class="chip">{e.years}</span>
@@ -100,7 +144,7 @@
 
 	<div class="space-y-6">
 		<section class="panel space-y-4 p-6">
-			<h2 class="font-display text-2xl font-bold text-sky-950">Skills</h2>
+			<h2 class="font-display text-2xl font-bold text-sky-950">{t('Skills', 'Compétences')}</h2>
 			{#each skills as s (s.name)}
 				<div>
 					<p class="text-sm font-semibold">{s.name}</p>
@@ -118,7 +162,7 @@
 		</section>
 
 		<section class="panel space-y-3 p-6">
-			<h2 class="font-display text-2xl font-bold text-sky-950">Toolbox</h2>
+			<h2 class="font-display text-2xl font-bold text-sky-950">{t('Toolbox', 'Boîte à outils')}</h2>
 			{#each toolbox as group (group.name)}
 				<div>
 					<p class="text-sm font-semibold">{group.name}</p>
