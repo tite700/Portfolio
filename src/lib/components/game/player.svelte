@@ -17,6 +17,9 @@
 
 	// --- Tuning ---
 	const WALK_SPEED = 5.5;
+	const STICK_DEAD = 0.08; // touch joystick: ignored below this push
+	const STICK_WALK = 0.3; // walk up to this push, skate beyond
+	const TOUCH_SENSITIVITY = 0.006; // camera, per pixel swiped
 	const SKATE_PUSH = 10; // m/s² while holding a direction
 	const SKATE_MAX = 15;
 	const SKATE_TURN = 2.8; // rad/s
@@ -91,6 +94,14 @@
 		if (!body) return;
 		const p = body.translation();
 		if (p.y < -10) return respawn();
+		if (game.actions.respawn) {
+			game.actions.respawn = false;
+			return respawn();
+		}
+		if (game.actions.jump) {
+			game.actions.jump = false;
+			jumpQueued = true;
+		}
 
 		const hit = world.castRayAndGetNormal(
 			new rapier.Ray(p, { x: 0, y: -1, z: 0 }),
@@ -111,9 +122,18 @@
 			trick.time = -1;
 		}
 
+		// Input: keyboard, or the touch joystick where a small push walks and a big one skates.
+		const stick = game.stick;
+		const push = stick.active ? Math.min(1, Math.hypot(stick.x, stick.y)) : 0;
+		const touching = push > STICK_DEAD;
+		if (touching && game.skating !== push > STICK_WALK) game.skating = push > STICK_WALK;
+		const fwd = touching
+			? -stick.y
+			: (pressed('KeyW', 'ArrowUp') ? 1 : 0) - (pressed('KeyS', 'ArrowDown') ? 1 : 0);
+		const right = touching
+			? stick.x
+			: (pressed('KeyD', 'ArrowRight') ? 1 : 0) - (pressed('KeyA', 'ArrowLeft') ? 1 : 0);
 		// Input direction relative to the camera, on the ground plane.
-		const fwd = (pressed('KeyW', 'ArrowUp') ? 1 : 0) - (pressed('KeyS', 'ArrowDown') ? 1 : 0);
-		const right = (pressed('KeyD', 'ArrowRight') ? 1 : 0) - (pressed('KeyA', 'ArrowLeft') ? 1 : 0);
 		let ix = -Math.sin(yaw) * fwd + Math.cos(yaw) * right;
 		let iz = -Math.cos(yaw) * fwd - Math.sin(yaw) * right;
 		const len = Math.hypot(ix, iz);
@@ -151,8 +171,10 @@
 			}
 		} else {
 			const a = 1 - Math.exp(-(grounded ? 14 : 3) * dt);
-			vx += (ix * WALK_SPEED - vx) * a;
-			vz += (iz * WALK_SPEED - vz) * a;
+			// With the joystick, walking speed follows the push.
+			const speed = WALK_SPEED * (touching ? Math.min(1, push / STICK_WALK) : 1);
+			vx += (ix * speed - vx) * a;
+			vz += (iz * speed - vz) * a;
 			if (len) heading = turnToward(heading, Math.atan2(ix, iz), 12 * dt);
 		}
 
@@ -277,7 +299,23 @@
 				game.openSlug = game.nearSlug;
 				keys.clear();
 				document.exitPointerLock();
-			} else canvas.requestPointerLock();
+			} else if (matchMedia('(pointer: fine)').matches) canvas.requestPointerLock();
+		};
+		// Touch: swipe on the scene to turn the camera.
+		let swipe: { id: number; x: number; y: number } | null = null;
+		const touchStart = (e: PointerEvent) => {
+			if (e.pointerType === 'touch' && !swipe)
+				swipe = { id: e.pointerId, x: e.clientX, y: e.clientY };
+		};
+		const touchMove = (e: PointerEvent) => {
+			if (e.pointerId !== swipe?.id) return;
+			yaw -= (e.clientX - swipe.x) * TOUCH_SENSITIVITY;
+			pitch = Math.min(1.3, Math.max(-0.1, pitch + (e.clientY - swipe.y) * TOUCH_SENSITIVITY));
+			swipe.x = e.clientX;
+			swipe.y = e.clientY;
+		};
+		const touchEnd = (e: PointerEvent) => {
+			if (e.pointerId === swipe?.id) swipe = null;
 		};
 		const wheel = (e: WheelEvent) => {
 			e.preventDefault();
@@ -285,9 +323,17 @@
 		};
 		canvas.addEventListener('mousedown', down);
 		canvas.addEventListener('wheel', wheel, { passive: false });
+		canvas.addEventListener('pointerdown', touchStart);
+		canvas.addEventListener('pointermove', touchMove);
+		canvas.addEventListener('pointerup', touchEnd);
+		canvas.addEventListener('pointercancel', touchEnd);
 		return () => {
 			canvas.removeEventListener('mousedown', down);
 			canvas.removeEventListener('wheel', wheel);
+			canvas.removeEventListener('pointerdown', touchStart);
+			canvas.removeEventListener('pointermove', touchMove);
+			canvas.removeEventListener('pointerup', touchEnd);
+			canvas.removeEventListener('pointercancel', touchEnd);
 		};
 	});
 </script>

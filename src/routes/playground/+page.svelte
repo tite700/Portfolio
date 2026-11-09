@@ -4,6 +4,7 @@
 	import { NoToneMapping, WebGLRenderer } from 'three';
 	import City from '$lib/components/game/city.svelte';
 	import Player from '$lib/components/game/player.svelte';
+	import Joystick from '$lib/components/joystick.svelte';
 	import Minimap from '$lib/components/minimap.svelte';
 	import { game } from '$lib/components/game/state.svelte';
 	import { SPAWN, href, spots } from '$lib/content';
@@ -12,6 +13,9 @@
 	const found = $derived(spots.find((s) => s.slug === game.openSlug));
 	const open = $derived(found && tr(found));
 
+	// Phones and tablets get a joystick and buttons instead of the keyboard and mouse.
+	const touch = matchMedia('(pointer: coarse)').matches;
+
 	// No antialiasing + half resolution + pixelated upscale = handheld 2010s look.
 	const createRenderer = (canvas: HTMLCanvasElement) =>
 		new WebGLRenderer({ canvas, antialias: false });
@@ -19,7 +23,7 @@
 
 <svelte:window onkeydown={(e) => e.code === 'Escape' && (game.openSlug = null)} />
 
-<div class="game relative h-[calc(100vh-5.5rem)] w-full select-none overflow-hidden">
+<div class="game relative h-[calc(100dvh-5.5rem)] w-full touch-none select-none overflow-hidden">
 	<Canvas dpr={0.5} toneMapping={NoToneMapping} {createRenderer}>
 		<World gravity={[0, -20, 0]}>
 			<City />
@@ -40,32 +44,64 @@
 		{/key}
 	{/if}
 
-	<div
-		class="pointer-events-none absolute left-4 top-4 rounded-md bg-black/50 px-3 py-2 text-sm text-white"
-	>
-		<p>
+	{#if touch}
+		<div
+			class="pointer-events-none absolute left-3 top-3 max-w-[calc(100%-13rem)] rounded-md bg-black/50 px-2 py-1 text-xs text-white"
+		>
 			{t(
-				'Click to grab the mouse · Esc to release · R: respawn',
-				'Clic pour capturer la souris · Échap pour la libérer · R : réapparaître'
+				'Joystick: a small push walks, a big one skates · Swipe to look around · ⤒: jump (again in the air: trick)',
+				'Joystick : petite poussée pour marcher, grande pour le skate · Glissez pour regarder · ⤒ : sauter (encore en l’air : figure)'
 			)}
-		</p>
-		<p>
-			{t('ZQSD / WASD: move', 'ZQSD / WASD : se déplacer')} ·
-			{t(
-				'Space: jump (again in the air on the board: trick)',
-				'Espace : sauter (encore en l’air sur la planche : figure)'
-			)} ·
-			{game.skating
-				? t('Shift: get off the skateboard', 'Maj : descendre du skate')
-				: t('Shift: get on the skateboard', 'Maj : monter sur le skate')}
-		</p>
-		<p>
-			{t(
-				'Walk up to the glowing markers and left click to open them',
-				'Approchez-vous des marqueurs lumineux et faites un clic gauche pour les ouvrir'
-			)}
-		</p>
-	</div>
+		</div>
+
+		<div class="absolute bottom-6 left-6"><Joystick /></div>
+		<div class="absolute bottom-6 right-6 flex flex-col items-end gap-3">
+			{#if game.nearSlug}
+				<button class="btn-game text-lg" onclick={() => (game.openSlug = game.nearSlug)}>
+					{t('Open ▶', 'Ouvrir ▶')}
+				</button>
+			{/if}
+			<div class="flex items-end gap-3">
+				<button
+					class="btn-game h-11 w-11 justify-center rounded-full p-0"
+					aria-label={t('Respawn', 'Réapparaître')}
+					onclick={() => (game.actions.respawn = true)}>↺</button
+				>
+				<button
+					class="btn-game h-20 w-20 justify-center rounded-full p-0 text-3xl"
+					aria-label={t('Jump', 'Sauter')}
+					onpointerdown={() => (game.actions.jump = true)}>⤒</button
+				>
+			</div>
+		</div>
+	{:else}
+		<div
+			class="pointer-events-none absolute left-4 top-4 rounded-md bg-black/50 px-3 py-2 text-sm text-white"
+		>
+			<p>
+				{t(
+					'Click to grab the mouse · Esc to release · R: respawn',
+					'Clic pour capturer la souris · Échap pour la libérer · R : réapparaître'
+				)}
+			</p>
+			<p>
+				{t('ZQSD / WASD: move', 'ZQSD / WASD : se déplacer')} ·
+				{t(
+					'Space: jump (again in the air on the board: trick)',
+					'Espace : sauter (encore en l’air sur la planche : figure)'
+				)} ·
+				{game.skating
+					? t('Shift: get off the skateboard', 'Maj : descendre du skate')
+					: t('Shift: get on the skateboard', 'Maj : monter sur le skate')}
+			</p>
+			<p>
+				{t(
+					'Walk up to the glowing markers and left click to open them',
+					'Approchez-vous des marqueurs lumineux et faites un clic gauche pour les ouvrir'
+				)}
+			</p>
+		</div>
+	{/if}
 
 	{#if open}
 		<div class="absolute inset-0 flex items-center justify-center bg-black/40 p-4">

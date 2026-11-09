@@ -36,15 +36,22 @@ Run `npm run dev` and open `/editor`: a top-down view of the map.
 
 The editor and its save endpoint return 404 in production.
 
-### Game controls
+### Playground controls
 
-- **Click**: capture the mouse (pointer lock) · **Esc**: release it
-- **ZQSD / WASD / arrow keys**: roll
-- **Space**: jump
-- **R**: respawn
-- **Mouse wheel**: zoom
+Keyboard and mouse:
 
-The `/game` route turns off SSR (`src/routes/game/+page.ts`) because Rapier (WASM) and pointer lock only work in the browser.
+- **Click**: capture the mouse (pointer lock) · **Esc**: release it · **Mouse wheel**: zoom
+- **ZQSD / WASD / arrow keys**: move · **Shift**: get on / off the skateboard
+- **Space**: jump; again in the air on the board: trick
+- **R**: respawn · **Left click** next to a glowing marker: open it
+
+Phones and tablets (`pointer: coarse`) get touch controls instead:
+
+- **Joystick** (bottom left): a small push (inside the dashed ring, 30 %) walks, faster as you push; a bigger push gets on the skateboard
+- **Swipe** on the scene to turn the camera
+- **⤒**: jump / trick · **↺**: respawn · **Open ▶** appears next to a marker
+
+The tuning (speeds, joystick thresholds, tricks) is at the top of `src/lib/components/game/player.svelte`. The `/playground` route turns off SSR (`src/routes/playground/+page.ts`) because Rapier (WASM) and pointer lock only work in the browser.
 
 ## Tech stack
 
